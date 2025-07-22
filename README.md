@@ -1,7 +1,6 @@
 # GPT-by-Hand
 
-This repository contains a tested, documented, and modular implementation of a GPT language model, based on Andrej Karpathy's [nanoGPT](https://github.com/karpathy/nanoGPT).
-
+This repository contains a tested, documented, and modular implementation of a GPT language model.
 The project is designed to deepen the understanding of transformer-based language models. It combines a well-documented codebase with **model sizes small enough** that the calculations can be performed by hand, making it an ideal tool for learning and development.
 
 
