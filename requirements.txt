@@ -1,0 +1,6 @@
+wandb
+jax[tpu]
+flax
+pytorch
+optax
+tensorflow
