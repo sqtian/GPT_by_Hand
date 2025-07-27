@@ -430,7 +430,7 @@ class GPTTrainer:
           running_mfu = mfu if running_mfu == - \
               1.0 else (0.9 * running_mfu + 0.1 * mfu)
         print(
-          f"Iter {iter_num}: loss {lossf:.4f}, time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}%")
+            f"Iter {iter_num}: loss {lossf:.4f}, time {dt * 1000:.2f}ms, mfu {running_mfu * 100:.2f}%")
 
       iter_num += 1
       local_iter_num += 1
@@ -452,6 +452,8 @@ if __name__ == "__main__":
                       help='Device to train on (e.g., "cpu", "cuda", "cuda:0", "mps"). Overrides config setting.')
   parser.add_argument('--max_iters', type=int, default=None,
                       help='The maximum number of training iterations. Overrides config setting.')
+  parser.add_argument('--dataset', type=str, default=None,
+                      help='Dataset to use for training (e.g., "shakespeare_char", "tiny_demo"). Overrides config setting.')
   args = parser.parse_args()
 
   # Create the model and training configurations.
@@ -459,7 +461,13 @@ if __name__ == "__main__":
   train_config = TrainConfig(
     device=args.device,
   )
+
   print(f"Using device: {train_config.device}")
+
+  # Override train_config with command line arguments.
+  if args.dataset:
+    train_config.dataset = args.dataset
+
   if args.max_iters:
     train_config.max_iters = args.max_iters
 
