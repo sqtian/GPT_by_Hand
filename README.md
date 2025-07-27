@@ -13,12 +13,7 @@ Our demo model uses tiny parameters perfect for educational purposes:
 - **Embedding Dimension**: 16 (vs GPT-2's 768)
 - **Total Parameters**: ~1,000 (vs GPT-2's 124M)
 
-This allows you to:
-- Manually calculate attention scores
-- Trace forward passes by hand
-- Understand each component deeply
-- Train quickly on any machine (even CPU)
-
+This allows you to manually calculate attention + FFN activations, and trace forward passes by hand.
 
 ## Quick Start
 
@@ -45,7 +40,7 @@ cd ..
 
 ### 3. Train the Model
 
-Train on tiny demo data (very fast, ~1 minute):
+Train on tiny demo data (very fast, <1 minute):
 ```bash
 python train.py --device cpu --max_iters 200
 ```

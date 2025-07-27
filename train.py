@@ -93,7 +93,12 @@ class GPTTrainer:
       f"The number of tokens per iteration will be: {train_config.tokens_per_iter}")
 
     # Sets the device type based on the device string, for later use in torch.autocast.
-    train_config.device_type = 'cuda' if 'cuda' in train_config.device else 'cpu'
+    if 'cuda' in train_config.device:
+        train_config.device_type = 'cuda'
+    elif 'mps' in train_config.device:
+        train_config.device_type = 'mps'
+    else:
+        train_config.device_type = 'cpu'
 
     # Sets the path to the data file.
     train_config.data_dir = os.path.join(
@@ -175,6 +180,7 @@ class GPTTrainer:
       y = y.pin_memory().to(self.train_config.device, non_blocking=True)
     else:
       # Move the tensors to device.
+      # Note: MPS doesn't support pin_memory(), so we move directly
       x = x.to(self.train_config.device)
       y = y.to(self.train_config.device)
 
@@ -448,13 +454,22 @@ if __name__ == "__main__":
   parser = argparse.ArgumentParser(description='Train a GPT model')
 
   # Add device argument with default value
-  parser.add_argument('--device', type=str, default="cuda",
-                      help='Device to train on (e.g., "cpu", "cuda", "cuda:0", "mps"). Overrides config setting.')
+  parser.add_argument('--device', type=str, default=None,
+                      help='Device to train on (e.g., "cpu", "cuda", "cuda:0", "mps"). If not specified, auto-detects.')
   parser.add_argument('--max_iters', type=int, default=None,
                       help='The maximum number of training iterations. Overrides config setting.')
   parser.add_argument('--dataset', type=str, default=None,
                       help='Dataset to use for training (e.g., "shakespeare_char", "tiny_demo"). Overrides config setting.')
   args = parser.parse_args()
+
+  # Auto-detect device if not specified
+  if args.device is None:
+    if torch.cuda.is_available():
+        args.device = 'cuda'
+    elif torch.backends.mps.is_available():
+        args.device = 'mps'
+    else:
+        args.device = 'cpu'
 
   # Create the model and training configurations.
   model_config = ModelConfig()

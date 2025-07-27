@@ -79,9 +79,9 @@ class TrainConfig:
   lr_decay_iters = 2000  # should be ~= max_iters per Chinchilla; Was 600k
   min_lr = 3e-5  # minimum learning rate, should be ~= learning_rate/10 per Chinchilla; Was 6e-5
   # system
-  device: str = DEVICE_CUDA
+  device: str = DEVICE_CPU  # Will be auto-detected or overridden
   # for later use in torch.autocast
-  device_type = 'cuda' if 'cuda' in device else 'cpu'
+  device_type = 'cuda' if 'cuda' in device else ('mps' if 'mps' in device else 'cpu')
   dtype = torch.bfloat16 if torch.cuda.is_available(
       # The latter will auto implement a GradScaler
   ) and torch.cuda.is_bf16_supported() and (device == DEVICE_CUDA) else torch.float16
