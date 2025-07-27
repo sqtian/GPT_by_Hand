@@ -79,46 +79,29 @@ Try calculating attention scores by hand:
 TODO
 
 
-## Dataset Preparation
 
-### Tiny Demo Dataset
-- **Size**: ~3,200 characters
-- **Patterns**: Repeated phrases like "hello world", "the quick brown fox"
-- **Training time**: ~1 minute on CPU
-- **Purpose**: Quick experimentation and testing
+## Appendix
 
-### Shakespeare Dataset  
-- **Size**: ~1MB of Shakespeare text
-- **Vocabulary**: Most common 31 characters + `<UNK>`
-- **Training time**: ~10 minutes on CPU, ~2 minutes on GPU
-- **Purpose**: More realistic text generation
 
-### Custom Dataset
-To use your own text data:
-
-1. Create a new preparation script in `data/` folder
-2. Process your text into train.bin and val.bin (numpy uint16 arrays)
-3. Create meta.pkl with vocabulary mappings
-4. Update `dataset` in `train_config.py`
-
-## Code Structure
+### Code Structure
 
 ```
 gpt-by-hand/
-├── model.py             # GPT model architecture
-├── model_config.py      # Model configuration class
-├── model_test.py        # Tests for model components
-├── train.py             # Training loop and logic
-├── train_config.py      # Training configuration class
-├── train_test.py        # Tests for training components
-├── generate.py          # Text generation script
-├── data/                # Data preparation scripts
-│   ├── prepare_tiny_demo.py      # Create tiny demo dataset
+├── README.md                     # Project documentation
+├── model.py                      # GPT model architecture
+├── model_config.py               # Model configuration class
+├── model_test.py                 # Tests for model components
+├── train.py                      # Training loop and logic
+├── train_config.py               # Training configuration class
+├── train_test.py                 # Tests for training components
+├── generate.py                   # Text generation script (inference)
+├── data/                         # Data preparation scripts
+│   ├── prepare_tiny_demo.py      # Create tiny demo dataset (Primary choice)
 │   └── prepare_shakespeare.py    # Prepare Shakespeare dataset
-└── README.md            # Project documentation
+└── out/                          # The model checkpoints
 ```
 
-## Training Configuration
+### Training Configuration
 
 Key training parameters optimized for small models:
 
@@ -133,6 +116,26 @@ gradient_accumulation_steps = 4
 learning_rate = 3e-4
 warmup_iters = 100
 ```
+
+## Dataset Preparation
+
+### Tiny Demo Dataset
+- **Size**: ~3,200 characters
+- **Patterns**: Repeated phrases like "hello world", "the quick brown fox"
+- **Purpose**: Quick experimentation and testing
+
+### Shakespeare Dataset  
+- **Size**: ~1MB of Shakespeare text
+- **Vocabulary**: Most common 31 characters + `<UNK>`
+- **Purpose**: More realistic text generation
+
+### Custom Dataset
+To use your own text data:
+
+1. Create a new preparation script in `data/` folder
+2. Process your text into train.bin and val.bin (numpy uint16 arrays)
+3. Create meta.pkl with vocabulary mappings
+4. Update `dataset` in `train_config.py`
 
 
 ## Contributing
