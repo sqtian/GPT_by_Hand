@@ -18,15 +18,15 @@ class ModelConfig:
   # The token embeddings. For example, we have vocab_size words, each word is a vector of size dim_embedding.
   # GPT-2 vocab_size is 50257, padded up to nearest multiple of 64 for efficiency.]
   # In GPT_BY_HAND, we use 64 as the vocabulary size.
-  vocab_size: int = 64  # 50304
+  vocab_size: int = 32  # 50304
   # The position embeddings. For example, in a sentence we have block_size / seq_length positions,
   # each position is a vector of size dim_embedding.
   # It tells us the position of the word in the sentence.
-  seq_length: int = 16  # GPT2 uses 1024
+  seq_length: int = 8  # GPT2 uses 1024
   num_layers: int = 2  # GPT2 uses 12
   num_heads: int = 2  # GPT2 uses 12
   # The embedding dimensionality.
-  dim_embedding: int = 32  # GPT2 uses 768
+  dim_embedding: int = 16  # GPT2 uses 768
   dropout_rate: float = 0.0
   # True: bias in Linears and LayerNorms, like GPT-2. 
   # False: a bit better and faster

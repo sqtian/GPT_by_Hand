@@ -1,5 +1,6 @@
 import dataclasses
 import torch
+import model_config
 
 
 # Constants for `init_from` options
@@ -57,7 +58,7 @@ class TrainConfig:
   #       optimizer.zero_grad()
   gradient_accumulation_steps = 5 * 8  # Per each process.
   batch_size = 12  # if gradient_accumulation_steps > 1, this is the micro-batch size
-  seq_length = 1024  # Aka block_size.
+  seq_length = model_config.ModelConfig.seq_length  # Aka block_size.
   # The number of tokens per iteration, assuming we only have 1 process on 1 GPU.
   # If ddp_world_size > 1, we will divide gradient_accumulation_steps by ddp_world_size,
   # and the number of tokens per iteration will be

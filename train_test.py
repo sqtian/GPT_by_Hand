@@ -10,7 +10,7 @@ from train import GPTTrainer
 from model_config import ModelConfig
 from train_config import TrainConfig, DEVICE_CPU, DEVICE_CUDA
 import tempfile
-
+import model_config
 
 class TestGPTTrainer(unittest.TestCase):
   def setUp(self):
@@ -329,7 +329,7 @@ class TestGPTTrainer(unittest.TestCase):
     # Set the sequence length attribute directly on the mock model
     # We'll set it to a different value than test_config.seq_length to trigger the assertion
     mock_model.config = MagicMock()
-    mock_model.config.seq_length = 1024
+    mock_model.config.seq_length = model_config.ModelConfig.seq_length
 
     with patch.object(GPTTrainer, 'setup_train_config', return_value=test_config):
       trainer = GPTTrainer(test_config, self.model_config)
