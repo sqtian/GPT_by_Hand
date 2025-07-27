@@ -8,6 +8,9 @@ import os
 import pickle
 import requests
 import numpy as np
+import sys
+sys.path.append('..')  # Add parent directory to path
+from model_config import ModelConfig
 
 # Download the tiny shakespeare dataset
 data_url = 'https://raw.githubusercontent.com/karpathy/char-rnn/master/data/tinyshakespeare/input.txt'
@@ -47,10 +50,11 @@ def prepare_shakespeare_data():
     print(f"Unique characters: {''.join(chars)}")
     
     # For demo purposes, we'll limit the vocabulary to make it even smaller
-    # Take only the most common characters to match our small vocab_size of 32
+    # Take only the most common characters to match our small vocab_size from model config
     from collections import Counter
+    target_vocab_size = ModelConfig.vocab_size
     char_counts = Counter(data)
-    most_common_chars = [char for char, count in char_counts.most_common(31)]  # 31 + 1 unknown token = 32
+    most_common_chars = [char for char, count in char_counts.most_common(target_vocab_size - 1)]  # Reserve 1 slot for unknown token
     
     # Add a special token for unknown characters
     chars = most_common_chars + ['<UNK>']

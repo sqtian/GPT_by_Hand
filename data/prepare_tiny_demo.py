@@ -7,6 +7,9 @@ This creates a very small dataset with repeated patterns for quick experimentati
 import os
 import pickle
 import numpy as np
+import sys
+sys.path.append('..')  # Add parent directory to path
+from model_config import ModelConfig
 
 def create_tiny_demo_data():
     """Create a tiny demo dataset with simple patterns."""
@@ -39,11 +42,14 @@ def create_tiny_demo_data():
     chars = sorted(list(set(data)))
     vocab_size = len(chars)
     
-    # Pad vocabulary to exactly 32 characters (our model's vocab_size)
-    while len(chars) < 32:
+    # Get target vocab size from model config
+    target_vocab_size = ModelConfig.vocab_size
+    
+    # Pad vocabulary to exactly target_vocab_size characters (our model's vocab_size)
+    while len(chars) < target_vocab_size:
         chars.append(f'<PAD{len(chars)}>')
     
-    chars = chars[:32]  # Ensure exactly 32
+    chars = chars[:target_vocab_size]  # Ensure exactly target_vocab_size
     vocab_size = len(chars)
     
     print(f"Vocabulary size: {vocab_size}")
