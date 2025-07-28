@@ -30,6 +30,7 @@ class TrainConfig:
   eval_iters: int = 20  # Reduced for demo; Was 200
   eval_only: bool = False  # if True, script exits right after the first eval
   always_save_checkpoint: bool = True  # if True, always save a checkpoint after each eval
+  skip_save_checkpoint: bool = False  # if True, skip saving the checkpoint
   init_from: str = INIT_FROM_SCRATCH  # 'scratch' or 'resume' or 'gpt2*'
   # wandb logging
   wandb_log: bool = False  # disabled by default

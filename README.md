@@ -65,16 +65,8 @@ TODO
 
 
 
-With sequence "hello" (tokens: [7, 4, 11, 11, 14]):
-1. **Token Embeddings**: Each token → 16-dimensional vector
-2. **Position Embeddings**: Position 0,1,2,3,4 → 16-dimensional vectors  
-3. **Attention**: 2 heads, each seeing 8-dimensional query/key/value
-4. **Feed Forward**: 16 → 64 → 16 dimensions
-5. **Output**: Logits over 32 vocabulary tokens
-
 ### Manual Calculation Exercise
 Try calculating attention scores by hand:
-
 
 TODO
 

@@ -365,7 +365,7 @@ class GPTTrainer:
               "mfu": running_mfu * 100,  # convert to percentage
           })
         # Stores the best validation loss and saves the model checkpoint.
-        if losses['val'] < best_val_loss or self.train_config.always_save_checkpoint:
+        if (not self.train_config.skip_save_checkpoint) and (losses['val'] < best_val_loss or self.train_config.always_save_checkpoint):
           best_val_loss = losses['val']
           if iter_num > 0:
             checkpoint = {
@@ -747,11 +747,15 @@ if __name__ == "__main__":
     train_config_kwargs['batch_size'] = args.batch_size
   if args.gradient_accumulation_steps:
     train_config_kwargs['gradient_accumulation_steps'] = args.gradient_accumulation_steps
+  if args.gpt_by_hand:
+    train_config_kwargs['gpt_by_hand'] = True
+    train_config_kwargs['skip_save_checkpoint'] = True
+    train_config_kwargs['max_iters'] = 2  # Limit to 2 iterations for gpt_by_hand mode
 
   train_config = TrainConfig(**train_config_kwargs)
 
   # Add gpt_by_hand flag to train_config
-  train_config.gpt_by_hand = args.gpt_by_hand
+
 
   print(f"Using device: {train_config.device}")
   print(f"Using dataset: {train_config.dataset}")
