@@ -94,11 +94,11 @@ class GPTTrainer:
 
     # Sets the device type based on the device string, for later use in torch.autocast.
     if 'cuda' in train_config.device:
-        train_config.device_type = 'cuda'
+      train_config.device_type = 'cuda'
     elif 'mps' in train_config.device:
-        train_config.device_type = 'mps'
+      train_config.device_type = 'mps'
     else:
-        train_config.device_type = 'cpu'
+      train_config.device_type = 'cpu'
 
     # Sets the path to the data file.
     train_config.data_dir = os.path.join(
@@ -235,7 +235,7 @@ class GPTTrainer:
     if self.is_ddp:
       self.model = DistributedDataParallel(self.model, device_ids=[
           self.train_config.ddp_local_rank])
-    
+
     # Store initial weights for comparison in gpt_by_hand mode
     if hasattr(self.train_config, 'gpt_by_hand') and self.train_config.gpt_by_hand:
       self.store_initial_weights()
@@ -407,10 +407,11 @@ class GPTTrainer:
           logits, loss = self.model(X, Y)
           # Scales the loss to account for gradient accumulation
           loss = loss / self.train_config.gradient_accumulation_steps
-          
+
           # Print detailed info for first 2 iterations if gpt_by_hand is enabled
           if hasattr(self.train_config, 'gpt_by_hand') and self.train_config.gpt_by_hand and iter_num < 2:
-            self.print_gpt_by_hand_info(iter_num, X, Y, logits, loss * self.train_config.gradient_accumulation_steps)
+            self.print_gpt_by_hand_info(
+              iter_num, X, Y, logits, loss * self.train_config.gradient_accumulation_steps)
 
         # Prefetch next batch immediately asynchronously, while model is doing the forward pass on the GPU.
         X, Y = self.get_batch(use_val=False)
@@ -427,11 +428,11 @@ class GPTTrainer:
       # Step the optimizer and scaler if training in fp16.
       self.scaler.step(self.optimizer)
       self.scaler.update()
-      
+
       # Print weight updates for first 2 iterations if gpt_by_hand is enabled
       if hasattr(self.train_config, 'gpt_by_hand') and self.train_config.gpt_by_hand and iter_num < 2:
         self.print_weight_updates(iter_num)
-      
+
       # Flush the gradients to be 0 as soon as we can, no need for this memory anymore.
       self.optimizer.zero_grad(set_to_none=True)
 
@@ -465,7 +466,7 @@ class GPTTrainer:
 
   def print_gpt_by_hand_info(self, iter_num: int, X: torch.Tensor, Y: torch.Tensor, logits: torch.Tensor, loss: torch.Tensor) -> None:
     """Print detailed information for manual calculation tracing.
-    
+
     Args:
         iter_num: Current iteration number
         X: Input tokens
@@ -473,130 +474,138 @@ class GPTTrainer:
         logits: Model output logits
         loss: Computed loss
     """
-    print(f"\n{'='*80}")
+    print(f"\n{'=' * 80}")
     print(f"GPT BY HAND - ITERATION {iter_num}")
-    print(f"{'='*80}")
-    
+    print(f"{'=' * 80}")
+
     # Load vocabulary for token-to-word conversion
     meta_path = os.path.join(self.train_config.data_dir, 'meta.pkl')
     if os.path.exists(meta_path):
       with open(meta_path, 'rb') as f:
         meta = pickle.load(f)
-        itos = meta.get('itos', {i: str(i) for i in range(self.model.config.vocab_size)})
+        itos = meta.get('itos', {i: str(i)
+                        for i in range(self.model.config.vocab_size)})
     else:
       itos = {i: str(i) for i in range(self.model.config.vocab_size)}
-    
+
     print(f"\n--- INPUT DATA ---")
     print(f"Input shape (X): {X.shape}")
     print(f"Target shape (Y): {Y.shape}")
-    
+
     # Print tokens and their corresponding words
     for batch_idx in range(X.shape[0]):
       input_tokens = X[batch_idx].cpu().numpy()
       target_tokens = Y[batch_idx].cpu().numpy()
-      
-      input_words = [itos.get(int(token), f"UNK_{token}") for token in input_tokens]
-      target_words = [itos.get(int(token), f"UNK_{token}") for token in target_tokens]
-      
+
+      input_words = [
+        itos.get(int(token), f"UNK_{token}") for token in input_tokens]
+      target_words = [
+        itos.get(int(token), f"UNK_{token}") for token in target_tokens]
+
       print(f"\nBatch {batch_idx}:")
       print(f"  Input tokens:  {input_tokens}")
       print(f"  Input words:   {input_words}")
       print(f"  Target tokens: {target_tokens}")
       print(f"  Target words:  {target_words}")
-    
+
     # Get model components for detailed inspection
     raw_model = self.model.module if self.is_ddp else self.model
-    
+
     print(f"\n--- MODEL ARCHITECTURE ---")
     print(f"Vocab size: {raw_model.config.vocab_size}")
     print(f"Sequence length: {raw_model.config.seq_length}")
     print(f"Embedding dim: {raw_model.config.dim_embedding}")
     print(f"Number of layers: {raw_model.config.num_layers}")
     print(f"Number of heads: {raw_model.config.num_heads}")
-    
+
     # Print embeddings and activations for the first batch
     print(f"\n--- EMBEDDINGS & ACTIVATIONS (Batch 0) ---")
     with torch.no_grad():
       device = X.device
       b, t = X[0:1].size()  # First batch only
-      
+
       # Token embeddings
       tok_emb = raw_model.transformer.wte(X[0:1])
       print(f"Token embeddings shape: {tok_emb.shape}")
       print(f"Token embeddings:\n{tok_emb[0].cpu().numpy()}")
-      
-      # Position embeddings  
+
+      # Position embeddings
       pos = torch.arange(0, t, dtype=torch.long, device=device)
       pos_emb = raw_model.transformer.wpe(pos)
       print(f"\nPosition embeddings shape: {pos_emb.shape}")
       print(f"Position embeddings:\n{pos_emb.cpu().numpy()}")
-      
+
       # Combined embeddings (after dropout)
       x = raw_model.transformer.drop(tok_emb + pos_emb)
       print(f"\nCombined embeddings (after dropout) shape: {x.shape}")
       print(f"Combined embeddings:\n{x[0].cpu().numpy()}")
-      
+
       # First transformer block activations
       first_block = raw_model.transformer.h[0]
-      
+
       # Layer norm 1 output
       x_norm1 = first_block.ln_1(x)
       print(f"\nAfter first LayerNorm shape: {x_norm1.shape}")
       print(f"After first LayerNorm:\n{x_norm1[0].cpu().numpy()}")
-      
+
       # Attention output (just the output, not intermediate Q,K,V for simplicity)
       attn_out = first_block.attn(x_norm1)
       print(f"\nAttention output shape: {attn_out.shape}")
       print(f"Attention output:\n{attn_out[0].cpu().numpy()}")
-      
+
       # After first residual connection
       x_after_attn = x + attn_out
-      print(f"\nAfter attention residual connection shape: {x_after_attn.shape}")
+      print(
+        f"\nAfter attention residual connection shape: {x_after_attn.shape}")
       print(f"After attention residual:\n{x_after_attn[0].cpu().numpy()}")
-      
+
       # Layer norm 2 output
       x_norm2 = first_block.ln_2(x_after_attn)
       print(f"\nAfter second LayerNorm shape: {x_norm2.shape}")
       print(f"After second LayerNorm:\n{x_norm2[0].cpu().numpy()}")
-      
+
       # MLP/FFN output
       mlp_out = first_block.mlp(x_norm2)
       print(f"\nMLP output shape: {mlp_out.shape}")
       print(f"MLP output:\n{mlp_out[0].cpu().numpy()}")
-      
+
       # After second residual connection (output of first transformer block)
       x_after_mlp = x_after_attn + mlp_out
       print(f"\nAfter MLP residual connection shape: {x_after_mlp.shape}")
-      print(f"After MLP residual (first block output):\n{x_after_mlp[0].cpu().numpy()}")
-    
+      print(
+        f"After MLP residual (first block output):\n{x_after_mlp[0].cpu().numpy()}")
+
     print(f"\n--- MODEL WEIGHTS (First Layer) ---")
     # Print some key weights for manual calculation
     first_attn = raw_model.transformer.h[0].attn
     print(f"Attention c_attn weight shape: {first_attn.c_attn.weight.shape}")
-    print(f"Attention c_attn weights (first 8x8):\n{first_attn.c_attn.weight[:8, :8].cpu().detach().numpy()}")
-    
+    print(
+      f"Attention c_attn weights (first 8x8):\n{first_attn.c_attn.weight[:8, :8].cpu().detach().numpy()}")
+
     if first_attn.c_attn.bias is not None:
       print(f"Attention c_attn bias shape: {first_attn.c_attn.bias.shape}")
-      print(f"Attention c_attn bias (first 8):\n{first_attn.c_attn.bias[:8].cpu().detach().numpy()}")
-    
+      print(
+        f"Attention c_attn bias (first 8):\n{first_attn.c_attn.bias[:8].cpu().detach().numpy()}")
+
     print(f"\n--- FORWARD PASS OUTPUTS ---")
     print(f"Logits shape: {logits.shape}")
-    print(f"Logits (first sequence, first 8 vocab items):\n{logits[0, :, :8].cpu().detach().numpy()}")
-    
+    print(
+      f"Logits (first sequence, first 8 vocab items):\n{logits[0, :, :8].cpu().detach().numpy()}")
+
     print(f"\nLoss: {loss.item():.6f}")
-    
+
     # Print softmax probabilities for the last position (next token prediction)
     with torch.no_grad():
       last_logits = logits[0, -1, :]  # Last position of first batch
       probs = torch.softmax(last_logits, dim=-1)
-      
+
       print(f"\nNext token probabilities (last position, batch 0):")
       # Show top 5 most likely tokens
       top_probs, top_indices = torch.topk(probs, min(5, len(probs)))
       for i, (prob, idx) in enumerate(zip(top_probs.cpu(), top_indices.cpu())):
         word = itos.get(int(idx), f"UNK_{idx}")
-        print(f"  {i+1}. Token {int(idx)} ('{word}'): {prob.item():.4f}")
-    
+        print(f"  {i + 1}. Token {int(idx)} ('{word}'): {prob.item():.4f}")
+
     print(f"\n--- GRADIENTS ---")
     # Print gradients for key parameters
     if first_attn.c_attn.weight.grad is not None:
@@ -604,89 +613,94 @@ class GPTTrainer:
       print(f"{first_attn.c_attn.weight.grad[:4, :4].cpu().numpy()}")
     else:
       print("No gradients computed yet")
-    
+
     # Print embedding gradients
     if raw_model.transformer.wte.weight.grad is not None:
       print(f"\nToken embedding gradients (first 4x4):")
       print(f"{raw_model.transformer.wte.weight.grad[:4, :4].cpu().numpy()}")
-    
+
     print(f"\n--- OPTIMIZER STATE ---")
     print(f"Learning rate: {self.optimizer.param_groups[0]['lr']}")
     print(f"Weight decay: {self.optimizer.param_groups[0]['weight_decay']}")
-    
-    print(f"\n{'='*80}")
+
+    print(f"\n{'=' * 80}")
     print(f"END ITERATION {iter_num}")
-    print(f"{'='*80}\n")
+    print(f"{'=' * 80}\n")
 
   def print_weight_updates(self, iter_num: int) -> None:
     """Print weight updates after optimizer step for manual calculation tracing.
-    
+
     Args:
         iter_num: Current iteration number
     """
     print(f"\n--- WEIGHT UPDATES (Iteration {iter_num}) ---")
-    
+
     raw_model = self.model.module if self.is_ddp else self.model
-    
+
     # Print updates for first attention layer
     first_attn = raw_model.transformer.h[0].attn
     lr = self.optimizer.param_groups[0]['lr']
-    
+
     print(f"Learning rate: {lr}")
-    
+
     # Show weight changes if we have initial weights stored
     if hasattr(self, 'initial_weights'):
       current_attn_weight = first_attn.c_attn.weight[:4, :4].cpu().detach()
       initial_attn_weight = self.initial_weights['attn_c_attn'][:4, :4].cpu()
       weight_change = current_attn_weight - initial_attn_weight
-      
+
       print(f"\nAttention c_attn weight changes (first 4x4):")
       print(f"{weight_change.numpy()}")
-      
+
       print(f"Attention c_attn weights after update (first 4x4):")
       print(f"{current_attn_weight.numpy()}")
-      
+
       # Show embedding weight changes
-      current_emb_weight = raw_model.transformer.wte.weight[:4, :4].cpu().detach()
+      current_emb_weight = raw_model.transformer.wte.weight[:4, :4].cpu(
+      ).detach()
       initial_emb_weight = self.initial_weights['token_emb'][:4, :4].cpu()
       emb_weight_change = current_emb_weight - initial_emb_weight
-      
+
       print(f"\nToken embedding weight changes (first 4x4):")
       print(f"{emb_weight_change.numpy()}")
-      
+
       print(f"Token embedding weights after update (first 4x4):")
       print(f"{current_emb_weight.numpy()}")
     else:
       # Fallback if no initial weights stored
       print(f"Attention c_attn weights (first 4x4) after update:")
       print(f"{first_attn.c_attn.weight[:4, :4].cpu().detach().numpy()}")
-      
+
       print(f"\nToken embedding weights (first 4x4) after update:")
-      print(f"{raw_model.transformer.wte.weight[:4, :4].cpu().detach().numpy()}")
-    
+      print(
+        f"{raw_model.transformer.wte.weight[:4, :4].cpu().detach().numpy()}")
+
     print(f"--- END WEIGHT UPDATES ---\n")
 
   def store_initial_weights(self) -> None:
     """Store initial weights for comparison in gpt_by_hand mode."""
     raw_model = self.model.module if self.is_ddp else self.model
-    
+
     # Store some key initial weights for comparison
     self.initial_weights = {}
-    
+
     # Store attention weights
     first_attn = raw_model.transformer.h[0].attn
-    self.initial_weights['attn_c_attn'] = first_attn.c_attn.weight.clone().detach()
-    
-    # Store embedding weights  
-    self.initial_weights['token_emb'] = raw_model.transformer.wte.weight.clone().detach()
-    
+    self.initial_weights['attn_c_attn'] = first_attn.c_attn.weight.clone(
+    ).detach()
+
+    # Store embedding weights
+    self.initial_weights['token_emb'] = raw_model.transformer.wte.weight.clone(
+    ).detach()
+
     print(f"\n--- INITIAL WEIGHTS STORED ---")
     print(f"Initial attention c_attn weights (first 4x4):")
     print(f"{self.initial_weights['attn_c_attn'][:4, :4].cpu().numpy()}")
-    
+
     print(f"\nInitial token embedding weights (first 4x4):")
     print(f"{self.initial_weights['token_emb'][:4, :4].cpu().numpy()}")
     print(f"--- END INITIAL WEIGHTS ---\n")
+
 
 if __name__ == "__main__":
   # Set up argument parser
@@ -698,37 +712,53 @@ if __name__ == "__main__":
   parser.add_argument('--max_iters', type=int, default=None,
                       help='The maximum number of training iterations. Overrides config setting.')
   parser.add_argument('--dataset', type=str, default=None,
-                      help='Dataset to use for training (e.g., "shakespeare_char", "tiny_demo"). Overrides config setting.')
+                      help='Dataset to use for training (e.g., "shakespeare_char", "tiny_demo", "tiny_demo_words"). Overrides config setting.')
   parser.add_argument('--gpt_by_hand', action='store_true',
                       help='Enable detailed printing for first 2 iterations to trace calculations by hand.')
+  parser.add_argument('--batch_size', type=int, default=None,
+                      help='Batch size for training. Overrides config setting.')
+  parser.add_argument('--gradient_accumulation_steps', type=int, default=None,
+                      help='Number of gradient accumulation steps. Overrides config setting.')
   args = parser.parse_args()
 
   # Auto-detect device if not specified
   if args.device is None:
     if torch.cuda.is_available():
-        args.device = 'cuda'
+      args.device = 'cuda'
     elif torch.backends.mps.is_available():
-        args.device = 'mps'
+      args.device = 'mps'
     else:
-        args.device = 'cpu'
+      args.device = 'cpu'
 
   # Create the model and training configurations.
   model_config = ModelConfig()
-  train_config = TrainConfig(
-    device=args.device,
-  )
-  
+
+  # Build TrainConfig with all command line arguments
+  train_config_kwargs = {
+    'device': args.device,
+  }
+
+  # Add optional arguments if provided
+  if args.dataset:
+    train_config_kwargs['dataset'] = args.dataset
+  if args.max_iters:
+    train_config_kwargs['max_iters'] = args.max_iters
+  if args.batch_size:
+    train_config_kwargs['batch_size'] = args.batch_size
+  if args.gradient_accumulation_steps:
+    train_config_kwargs['gradient_accumulation_steps'] = args.gradient_accumulation_steps
+
+  train_config = TrainConfig(**train_config_kwargs)
+
   # Add gpt_by_hand flag to train_config
   train_config.gpt_by_hand = args.gpt_by_hand
 
   print(f"Using device: {train_config.device}")
-
-  # Override train_config with command line arguments.
-  if args.dataset:
-    train_config.dataset = args.dataset
-
-  if args.max_iters:
-    train_config.max_iters = args.max_iters
+  print(f"Using dataset: {train_config.dataset}")
+  print(f"Using batch size: {train_config.batch_size}")
+  print(
+    f"Using gradient accumulation steps: {train_config.gradient_accumulation_steps}")
+  print(f"Using max iterations: {train_config.max_iters}")
 
   # Initialize the trainer and start training.
   trainer = GPTTrainer(train_config, model_config)
