@@ -750,12 +750,10 @@ if __name__ == "__main__":
   if args.gpt_by_hand:
     train_config_kwargs['gpt_by_hand'] = True
     train_config_kwargs['skip_save_checkpoint'] = True
-    train_config_kwargs['max_iters'] = 2  # Limit to 2 iterations for gpt_by_hand mode
+    # Limit to 2 iterations for gpt_by_hand mode
+    train_config_kwargs['max_iters'] = 2
 
   train_config = TrainConfig(**train_config_kwargs)
-
-  # Add gpt_by_hand flag to train_config
-
 
   print(f"Using device: {train_config.device}")
   print(f"Using dataset: {train_config.dataset}")
