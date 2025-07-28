@@ -59,11 +59,128 @@ python generate.py
 
 The model is small enough that you can manually trace through calculations:
 
-### Example Forward Pass
-
-TODO
 
 
+
+### Example Iterations
+
+Here's a breakdown of what happens during actual training iterations when you use the `--gpt_by_hand` flag, which outputs detailed tensor information.
+
+#### Iteration 0 - Initial Training Step
+
+This iteration uses the first batch of data.
+
+**Input Sequence:** `[0, 8, 0, 6, 0, 9, 0, 25]` which decodes to `"' gpt ' by ' hand ' project"`.
+
+**Target Sequence:** `[8, 0, 6, 0, 9, 0, 25, 0]` which decodes to `"gpt ' by ' hand ' project '"`. The model aims to predict these tokens given the input.
+
+##### Model Architecture in Action
+
+1. **Token Embeddings:** Each input token is converted into a 16-dimensional vector.
+
+2. **Position Embeddings:** These are added to the token embeddings to provide positional information within the sequence.
+
+3. **Layer 1 (Transformer Block):** The combined embeddings pass through the first transformer block, consisting of a 2-head self-attention mechanism followed by a feed-forward network.
+
+4. **Layer 2 (Transformer Block):** The output from Layer 1 then passes through a second identical transformer block.
+
+5. **Output Layer:** The final output from the transformer blocks is transformed into "logits," which are raw predictions for each of the 32 vocabulary tokens at each position in the sequence.
+
+##### Key Tensors (and their shapes for this iteration)
+
+**Combined Embeddings:** `[1, 8, 16]` (Batch Size: 1, Sequence Length: 8, Embedding Dimension: 16)
+
+```
+[[ 0.0025648 -0.00763123 ... 0.01054394 0.00168534]
+[ 0.02813374 0.00895928 ... 0.05949021 0.00570134]
+...
+[-0.01078424 -0.02195856 ... 0.04654259 0.03406077]
+[ 0.00170384 -0.00331098 ... -0.01766913 -0.01369504]]
+```
+
+**Attention Output:** `[1, 8, 16]` (Output after the self-attention mechanism)
+
+```
+[[-3.3116e-04 3.0899e-03 ... 2.2488e-03 -1.8942e-04]
+[ 9.9182e-04 1.5125e-03 ... -8.4543e-04 2.4433e-03]
+...
+[ 6.1154e-05 1.7376e-03 ... 3.3627e-03 -1.0290e-03]
+[ 5.4646e-04 1.8024e-03 ... 3.2291e-03 -7.6866e-04]]
+```
+
+**Final Logits (first sequence, first 8 vocab items):** `[1, 8, 32]`
+
+```
+[[ 0.2225 0.129 ... -0.06494 -0.001535]
+[ 0.1207 0.04 ... -0.04004 0.09106 ]
+...
+[ 0.2181 0.1218 ... 0.0318 0.03198 ]
+[-0.03055 -0.009766 ... 0.1681 0.05457 ]]
+```
+
+##### Training Progress at Iteration 0
+
+- **Training Loss:** 3.4518
+- **Validation Loss:** 3.4536
+- **Overall Loss:** 3.4873 (This is the loss calculated for the specific batch shown, which contributes to the overall training loss.)
+- **Learning Rate:** 0.0 (The model is in a "warmup" phase, where the learning rate is initially zero and gradually increases.)
+
+**Top Token Predictions (for the last position in the sequence):**
+- `'networks'`: 0.0382
+- `'project'`: 0.0368
+- `'by'`: 0.0360
+
+#### Iteration 1 - Learning Begins
+
+This iteration processes a different batch of data and shows the initial effects of training.
+
+**Input Sequence:** `[17, 0, 15, 0, 13, 0, 7, 0]` which decodes to `"machine ' learning ' is ' fun '"`.
+
+**Target Sequence:** `[0, 15, 0, 13, 0, 7, 0, 4]` which decodes to `"' learning ' is ' fun ' artificial"`.
+
+##### Observable Changes
+
+- **Loss:** 3.4309 (This is slightly lower than the loss from the previous batch, indicating that the model is starting to learn.)
+- **Learning Rate:** 2.9999999999999997e−06 (The learning rate has started to increase from zero, allowing the model's weights to be updated.)
+
+##### Weight Updates (Example: Attention c_attn weights)
+
+You'll notice that the "Attention c_attn weights after update" are slightly different from their "Before" values, indicating that the model's parameters are beginning to adjust based on the gradients. These are very small, incremental changes, as expected early in training.
+
+**Attention c_attn weights before update (first 4x4):**
+
+```
+[[ 0.019159678 -0.024671469 ... -0.0022882789 0.0053827376]
+[-0.020287437 -0.016469905 ... -0.0079479981 0.027898392]
+...
+[ 0.021043016 0.010694436 ... 9.2175527e-05 0.0038459431]]
+```
+
+**Attention c_attn weight changes (first 4x4):**
+
+```
+[[-1.5515834e-06 2.1010637e-06 ... 2.0395964e-06 -2.2901222e-06]
+[-1.5124679e-06 -2.6337802e-06 ... -1.2312084e-06 2.5294721e-06]
+...
+[-2.1774322e-06 -2.6402995e-06 ... -2.0524967e-06 2.5054906e-06]]
+```
+
+**Attention c_attn weights after update (first 4x4):**
+
+```
+[[ 0.0191581268 -0.0246693678 ... -0.00228623929 0.00538044749]
+[-0.0202889498 -0.0164725389 ... -0.00794922933 0.0279009212]
+...
+[ 0.0210408382 0.0106917955 ... 9.01230305e-05 0.00384844863]]
+```
+
+##### Gradient Flow
+
+Gradients are calculated (though not fully displayed for all parameters in the log, "No gradients computed yet" refers to the end of the iteration when the log is printed, but they were computed during the backward pass).
+
+These gradients flow backward from the output layer (logits to vocabulary) through Layer 2 (the second transformer block), then Layer 1 (the first transformer block), and finally to the token and position embeddings. This backpropagation process updates all the model's parameters.
+
+Each iteration processes different word sequences, gradually teaching the model patterns like "machine learning", "artificial intelligence", and "to be or not", leading to improved predictions over time.
 
 ### Manual Calculation Exercise
 Try calculating attention scores by hand:
