@@ -80,6 +80,28 @@ TODO
 
 
 
+## Tokenization
+
+The model uses word-level tokenization instead of character-level, making it easier to understand token mappings:
+
+### Vocabulary
+- **Size**: 32 unique words/tokens
+- **Examples**: `'hello' -> 10`, `'world' -> 31`, `'machine' -> 17`
+- **Special token**: `' '` (space) -> `0` for word separation
+
+### Example Tokenization
+```
+"hello world" -> [10, 0, 31, 0]  # hello + space + world + space
+"machine learning" -> [17, 0, 15, 0]  # machine + space + learning + space
+```
+
+### Training Sequences
+The model sees sequences like:
+- `[28, 0, 5, 0, 23, 0, 21, 0]` → `"to be or not "`
+- `[4, 0, 12, 0, 26, 0, 17, 0]` → `"artificial intelligence rocks machine "`
+
+This word-level approach makes it easy to trace which tokens correspond to which words during manual calculations.
+
 ## Appendix
 
 
@@ -87,18 +109,17 @@ TODO
 
 ```
 gpt-by-hand/
-├── README.md                     # Project documentation
-├── model.py                      # GPT model architecture
-├── model_config.py               # Model configuration class
-├── model_test.py                 # Tests for model components
-├── train.py                      # Training loop and logic
-├── train_config.py               # Training configuration class
-├── train_test.py                 # Tests for training components
-├── generate.py                   # Text generation script (inference)
-├── data/                         # Data preparation scripts
-│   ├── prepare_tiny_demo.py      # Create tiny demo dataset (Primary choice)
-│   └── prepare_shakespeare.py    # Prepare Shakespeare dataset
-└── out/                          # The model checkpoints
+├── README.md                      # Project documentation
+├── model.py                       # GPT model architecture
+├── model_config.py                # Model configuration class
+├── model_test.py                  # Tests for model components
+├── train.py                       # Training loop and logic
+├── train_config.py                # Training configuration class
+├── train_test.py                  # Tests for training components
+├── generate.py                    # Text generation script (inference)
+├── data/                          # Data preparation scripts
+│   ├── prepare_tiny_demo_words.py # Create tiny demo dataset (Primary choice)
+└── out/                           # The model checkpoints
 ```
 
 ### Training Configuration
