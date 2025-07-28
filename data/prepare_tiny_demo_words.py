@@ -4,7 +4,6 @@ Create a tiny custom dataset for ultra-fast demo training using WORD-LEVEL token
 This creates a very small dataset with repeated patterns for quick experimentation.
 """
 
-from model_config import ModelConfig
 import os
 import pickle
 import numpy as np
@@ -12,6 +11,7 @@ import sys
 import re
 import random
 sys.path.append('..')  # Add parent directory to path
+from model_config import ModelConfig
 
 
 def create_tiny_demo_word_data():
