@@ -56,8 +56,8 @@ class TrainConfig:
   #     if (i + 1) % gradient_accumulation_steps == 0:
   #       optimizer.step()
   #       optimizer.zero_grad()
-  gradient_accumulation_steps = 4  # Reduced for demo; Was 5*8
-  batch_size = 4  # Reduced for demo - small batches for small model; Was 12
+  gradient_accumulation_steps = 2  # Reduced for demo; Was 5*8
+  batch_size = 1  # Reduced for demo - small batches for small model; Was 12
   seq_length = model_config.ModelConfig.seq_length  # Aka block_size.
   # The number of tokens per iteration, assuming we only have 1 process on 1 GPU.
   # If ddp_world_size > 1, we will divide gradient_accumulation_steps by ddp_world_size,
