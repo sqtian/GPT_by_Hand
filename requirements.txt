@@ -1,6 +1,8 @@
 wandb
 jax[tpu]
 flax
-pytorch
+torch
+torchvision
 optax
 tensorflow
+requests

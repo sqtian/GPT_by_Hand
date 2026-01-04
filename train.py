@@ -371,7 +371,7 @@ class GPTTrainer:
             checkpoint = {
                 'model': raw_model.state_dict(),
                 'optimizer': self.optimizer.state_dict(),
-                'model_args': dataclasses.asdict(self.model.config),
+                'model_args': dataclasses.asdict(raw_model.config),
                 'iter_num': iter_num,
                 'best_val_loss': best_val_loss,
                 'config': self.get_global_env(),
