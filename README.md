@@ -50,6 +50,12 @@ Or for longer training:
 python train.py --device cuda --max_iters 2000  # Use GPU if available
 ```
 
+Or using PyTorch DDP,
+```bash
+torchrun --standalone --nproc_per_node=8 train.py
+```
+
+
 ### 4. Generate Text
 ```bash
 python generate.py
